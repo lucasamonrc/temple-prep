@@ -1,0 +1,14 @@
+{
+  "name": "temple-prep",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter frontend dev",
+    "dev:worker": "pnpm --filter worker dev",
+    "build": "pnpm --filter frontend build && pnpm --filter worker build",
+    "test:e2e": "pnpm --filter e2e test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "sharp", "workerd"]
+  }
+}
