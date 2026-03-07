@@ -21,10 +21,11 @@ export default defineConfig({
       name: "mobile-chrome",
       use: { ...devices["Pixel 5"] },
     },
-    {
-      name: "mobile-safari",
-      use: { ...devices["iPhone 12"] },
-    },
+    // Uncomment when WebKit is installed:
+    // {
+    //   name: "mobile-safari",
+    //   use: { ...devices["iPhone 12"] },
+    // },
   ],
   webServer: [
     {
