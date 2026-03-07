@@ -49,21 +49,21 @@ A web app for LDS temple preparation instructors to create personalized, interac
 - Git repository
 - README, AGENTS.md, specs/
 
-### Phase 2: Database + API
+### Phase 2: Database + API ✅
 - D1 migration with full schema
 - Admin auth middleware
 - Admin CRUD routes (packets)
 - Student packet read route
 - Student interactive routes (goals, escort, reflections, journal, todos)
 
-### Phase 3: Admin UI
+### Phase 3: Admin UI ✅
 - Login page with PIN authentication
 - Dashboard listing all packets
 - Create/Edit packet form
 - Packet preview (student view)
 - QR code generation for student links
 
-### Phase 4: Student Packet Page
+### Phase 4: Student Packet Page ✅
 All 13 sections, mobile-first:
 1. Cover Page
 2. Congratulations
@@ -79,12 +79,13 @@ All 13 sections, mobile-first:
 12. Contacts
 13. Closing Encouragement
 
-### Phase 5: E2E Tests
+### Phase 5: E2E Tests ✅
 - Admin login/rejection
 - Packet CRUD
 - Student page load + sections
 - Interactive features (goals, escort, reflections, journal, todos)
 - Mobile responsiveness
+- 30/30 tests passing (chromium + mobile-chrome)
 
 ### Phase 6: Polish
 - Print CSS
