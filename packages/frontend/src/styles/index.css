@@ -31,6 +31,32 @@
   }
 }
 
+@layer components {
+  .input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .input:focus {
+    border-color: var(--color-temple-blue);
+    box-shadow: 0 0 0 2px rgba(44, 74, 110, 0.15);
+  }
+
+  .input::placeholder {
+    color: #9ca3af;
+  }
+
+  textarea.input {
+    resize: vertical;
+  }
+}
+
 @media print {
   .no-print {
     display: none !important;
