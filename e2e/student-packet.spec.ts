@@ -177,7 +177,7 @@ test.describe("Student Packet Page", () => {
     await expect(reloadedCheckboxes.nth(2)).toBeChecked();
   });
 
-  test("AC-14: Spiritual resources - talks and scriptures with QR codes", async ({
+  test("AC-14: Spiritual resources - talks and scriptures with links", async ({
     page,
   }) => {
     await page.goto(`/p/${packetUuid}`);
@@ -198,10 +198,9 @@ test.describe("Student Packet Page", () => {
       page.getByRole("link", { name: /Psalm 24:3/ }),
     ).toBeVisible();
 
-    // Verify QR codes are rendered (svg elements)
-    const qrCodes = page.locator("[data-testid^='qr-']");
-    await expect(qrCodes.first()).toBeVisible();
-    expect(await qrCodes.count()).toBeGreaterThanOrEqual(10); // 5 talks + 7 scriptures = 12
+    // Verify links point to churchofjesuschrist.org
+    const talkLinks = page.locator('a[href*="churchofjesuschrist.org"]');
+    expect(await talkLinks.count()).toBeGreaterThanOrEqual(10); // 5 talks + 7 scriptures = 12
   });
 
   test("AC-15: Contacts section with tappable phone links", async ({

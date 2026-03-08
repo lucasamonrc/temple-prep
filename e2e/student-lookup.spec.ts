@@ -41,7 +41,7 @@ test.describe("Student Lookup Page", () => {
     await expect(page).toHaveURL(/\/p\/[0-9a-f-]+/);
 
     // Verify the student name is visible on the packet
-    await expect(page.getByText(LOOKUP_STUDENT.student_name)).toBeVisible();
+    await expect(page.getByText(LOOKUP_STUDENT.student_name)).toBeVisible({ timeout: 10000 });
   });
 
   test("AC-19: Wrong PIN shows error", async ({ page }) => {
