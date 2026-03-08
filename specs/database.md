@@ -30,6 +30,7 @@ The core table. One row per student packet, containing all admin-provided data.
 | instructor_name | TEXT | NULL | Temple prep instructor name |
 | instructor_phone | TEXT | NULL | Instructor phone |
 | instructor_email | TEXT | NULL | Instructor email |
+| student_pin | TEXT | NULL | 4-6 digit PIN for student lookup |
 
 ### `goals`
 Three goal rows per packet (seeded on creation).

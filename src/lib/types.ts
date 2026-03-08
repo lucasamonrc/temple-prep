@@ -20,6 +20,7 @@ export interface Packet {
   instructor_name: string | null;
   instructor_phone: string | null;
   instructor_email: string | null;
+  student_pin: string | null;
   goals: Goal[];
   escort: Escort | null;
   reflections: Reflection[];

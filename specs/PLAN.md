@@ -36,6 +36,7 @@ A web app for LDS temple preparation instructors to create personalized, interac
 | API Routes & Contracts | [api.md](api.md) | Complete |
 | Admin UI (Login, Dashboard, CRUD) | [admin-ui.md](admin-ui.md) | Complete |
 | Student Packet Page (all sections) | [student-packet.md](student-packet.md) | Complete |
+| Student PIN Lookup | [student-lookup.md](student-lookup.md) | Complete |
 | E2E Test Plan & Acceptance Criteria | [e2e-tests.md](e2e-tests.md) | Complete |
 
 ## Implementation Phases
@@ -85,9 +86,18 @@ All 13 sections, mobile-first:
 - Student page load + sections
 - Interactive features (goals, escort, reflections, journal, todos)
 - Mobile responsiveness
-- 30/30 tests passing (chromium + mobile-chrome)
+- Student PIN lookup (AC-18 through AC-23)
+- 42/42 tests passing (chromium + mobile-chrome)
 
-### Phase 6: Polish
+### Phase 7: Student PIN Lookup ✅
+- `student_pin` column added to `packets` table
+- `POST /api/packets/lookup` endpoint (first name + last name + PIN, case-insensitive)
+- Student lookup page at `/` (landing page)
+- Admin: PIN field in packet create/edit form, PIN shown on dashboard
+- 6 new e2e tests (AC-18 through AC-23)
+- 42/42 tests passing (chromium + mobile-chrome)
+
+### Phase 8: Polish
 - Print CSS
 - Final mobile polish
 - Any remaining refinements

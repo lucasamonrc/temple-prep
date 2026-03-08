@@ -67,6 +67,24 @@ Delete a packet and all related data (cascading).
 
 ## Student Routes
 
+### POST `/api/packets/lookup`
+Look up a packet by student name and PIN. Case-insensitive name matching.
+
+**Request:**
+```json
+{ "first_name": "John", "last_name": "Smith", "pin": "5678" }
+```
+
+**Response (200):**
+```json
+{ "uuid": "packet-uuid-here" }
+```
+
+**Response (404):**
+```json
+{ "error": "No packet found. Please check your name and PIN." }
+```
+
 ### GET `/api/packets/:uuid`
 Get the full packet with all related data. Same shape as the admin GET.
 

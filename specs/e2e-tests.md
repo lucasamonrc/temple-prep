@@ -93,3 +93,35 @@
 ### AC-17: Section Navigation
 - Verify bottom nav bar exists
 - Tap a section shortcut → verify scroll position changes
+
+## Student Lookup Tests (`e2e/student-lookup.spec.ts`)
+
+### AC-18: Student Lookup — Correct Credentials
+- Navigate to `/`
+- Enter first name, last name, and PIN
+- Submit → verify redirect to `/p/:uuid`
+- Verify student name visible on packet
+
+### AC-19: Student Lookup — Wrong PIN
+- Navigate to `/`
+- Enter correct name, wrong PIN
+- Submit → verify error message displayed
+- Verify still on `/`
+
+### AC-20: Student Lookup — Wrong Name
+- Navigate to `/`
+- Enter wrong name, correct PIN
+- Submit → verify error message displayed
+
+### AC-21: Student Lookup — Case-Insensitive Name
+- Create packet for "Lookup Testuser" with PIN
+- Navigate to `/`
+- Enter lowercase "lookup" / "testuser" with correct PIN
+- Submit → verify redirect to packet page
+
+### AC-22: Admin — PIN Field in Packet Form
+- Login → navigate to edit form for a packet with a PIN
+- Verify PIN input field is visible and populated with the correct value
+
+### AC-23: Admin — PIN Visible on Dashboard
+- Login → verify at least one packet shows its PIN on the dashboard

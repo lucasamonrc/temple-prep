@@ -28,6 +28,7 @@ export const packets = sqliteTable("packets", {
   instructor_name: text("instructor_name"),
   instructor_phone: text("instructor_phone"),
   instructor_email: text("instructor_email"),
+  student_pin: text("student_pin"),
 });
 
 export const goals = sqliteTable("goals", {

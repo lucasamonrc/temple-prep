@@ -5,6 +5,34 @@ import type { AppBindings } from "../types";
 
 const packetsRouter = new Hono<AppBindings>();
 
+// Lookup packet by first name + last name + student PIN
+packetsRouter.post("/lookup", async (c) => {
+  const db = c.get("db");
+  const body = await c.req.json<{
+    first_name: string;
+    last_name: string;
+    pin: string;
+  }>();
+
+  const fullName = `${body.first_name.trim()} ${body.last_name.trim()}`;
+
+  const [packet] = await db
+    .select({ id: packets.id })
+    .from(packets)
+    .where(
+      and(
+        sql`lower(${packets.student_name}) = lower(${fullName})`,
+        eq(packets.student_pin, body.pin),
+      ),
+    );
+
+  if (!packet) {
+    return c.json({ error: "No packet found. Please check your name and PIN." }, 404);
+  }
+
+  return c.json({ uuid: packet.id });
+});
+
 // Get full packet data (public - student view)
 packetsRouter.get("/:uuid", async (c) => {
   const db = c.get("db");

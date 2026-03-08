@@ -6,6 +6,7 @@ import type { Packet } from "@/lib/types";
 interface PacketSummary {
   id: string;
   student_name: string;
+  student_pin: string | null;
   created_at: string;
   updated_at: string;
 }

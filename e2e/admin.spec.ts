@@ -35,6 +35,7 @@ test.describe("Admin Portal", () => {
     await expect(page).toHaveURL("/admin/packets/new");
 
     await page.getByPlaceholder("e.g., John Smith").fill("Test AC03 Student");
+    await page.getByTestId("student-pin-input").fill("4321");
     await page.getByPlaceholder("Bishop...").fill("Bishop Test");
 
     await page.getByRole("button", { name: /create packet/i }).click();

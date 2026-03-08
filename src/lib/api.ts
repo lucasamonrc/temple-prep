@@ -69,6 +69,21 @@ export async function deletePacket(id: string) {
 
 // Student API
 
+export async function lookupPacket(
+  first_name: string,
+  last_name: string,
+  pin: string,
+): Promise<{ uuid: string } | null> {
+  const res = await fetch(`${API_BASE}/packets/lookup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ first_name, last_name, pin }),
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Failed to lookup packet");
+  return res.json();
+}
+
 export async function getPacket(uuid: string) {
   const res = await fetch(`${API_BASE}/packets/${uuid}`);
   if (res.status === 404) return null;

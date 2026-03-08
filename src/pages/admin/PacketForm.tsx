@@ -6,6 +6,7 @@ import type { MinisteringContact } from "@/lib/types";
 
 interface FormData {
   student_name: string;
+  student_pin: string;
   testimony: string;
   personal_note: string;
   congratulations_message: string;
@@ -27,6 +28,7 @@ interface FormData {
 
 const INITIAL_DATA: FormData = {
   student_name: "",
+  student_pin: "",
   testimony: "",
   personal_note: "",
   congratulations_message: "",
@@ -73,6 +75,7 @@ export function PacketForm() {
     if (packet) {
       setForm({
         student_name: packet.student_name || "",
+        student_pin: packet.student_pin || "",
         testimony: packet.testimony || "",
         personal_note: packet.personal_note || "",
         congratulations_message: packet.congratulations_message || "",
@@ -132,6 +135,10 @@ export function PacketForm() {
     e.preventDefault();
     if (!form.student_name.trim()) {
       setError("Student name is required.");
+      return;
+    }
+    if (!form.student_pin.trim() || form.student_pin.length < 4) {
+      setError("Student PIN must be 4-6 digits.");
       return;
     }
 
@@ -197,6 +204,19 @@ export function PacketForm() {
                 onChange={(e) => updateField("student_name", e.target.value)}
                 className="input"
                 placeholder="e.g., John Smith"
+              />
+            </Field>
+            <Field label="Student PIN" required hint="4-6 digit code the student will use to access their packet.">
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]{4,6}"
+                maxLength={6}
+                value={form.student_pin}
+                onChange={(e) => updateField("student_pin", e.target.value.replace(/\D/g, ""))}
+                className="input max-w-[200px]"
+                placeholder="e.g., 1234"
+                data-testid="student-pin-input"
               />
             </Field>
           </Section>

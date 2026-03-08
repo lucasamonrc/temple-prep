@@ -25,6 +25,7 @@ admin.get("/packets", async (c) => {
     .select({
       id: packets.id,
       student_name: packets.student_name,
+      student_pin: packets.student_pin,
       created_at: packets.created_at,
       updated_at: packets.updated_at,
     })
@@ -66,6 +67,7 @@ admin.post("/packets", async (c) => {
     instructor_name: body.instructor_name || null,
     instructor_phone: body.instructor_phone || null,
     instructor_email: body.instructor_email || null,
+    student_pin: body.student_pin || null,
   });
 
   // Seed default goals (batch insert)
@@ -151,6 +153,7 @@ admin.put("/packets/:id", async (c) => {
     "exec_secretary_name", "exec_secretary_phone", "exec_secretary_email",
     "ministering_brothers", "ministering_sisters",
     "instructor_name", "instructor_phone", "instructor_email",
+    "student_pin",
   ] as const;
 
   const updates: Record<string, unknown> = {};

@@ -111,6 +111,11 @@ export function AdminDashboard() {
                     <h3 className="text-lg font-serif text-temple-blue truncate">
                       {pkt.student_name}
                     </h3>
+                    {pkt.student_pin && (
+                      <p className="text-sm text-gray-600 mt-1" data-testid="packet-pin">
+                        PIN: <span className="font-mono font-medium">{pkt.student_pin}</span>
+                      </p>
+                    )}
                     <p className="text-sm text-gray-500 mt-1">
                       Created {formatDate(pkt.created_at)} &middot; Updated{" "}
                       {formatDate(pkt.updated_at)}

@@ -1,7 +1,10 @@
 export const TEST_PIN = "1234";
 
+export const TEST_STUDENT_PIN = "5678";
+
 export const TEST_PACKET = {
   student_name: "John Doe",
+  student_pin: TEST_STUDENT_PIN,
   testimony:
     "I know that the temple is the house of the Lord. I have felt His presence there and have been blessed with peace and guidance.",
   personal_note:
