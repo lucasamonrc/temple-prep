@@ -20,22 +20,34 @@ A web app for LDS temple preparation instructors to create personalized, interac
 | ----------- | --------------------------------------------------- |
 | Frontend    | Vite + React + TypeScript + React Router v7         |
 | Backend API | Cloudflare Workers + Hono                           |
+| Integration | @cloudflare/vite-plugin (single dev server)         |
 | Database    | Cloudflare D1 (SQLite)                              |
 | QR Codes    | qrcode.react                                        |
 | Styling     | Tailwind CSS v4                                     |
 | E2E Tests   | Playwright                                          |
-| Hosting     | Cloudflare Workers (API) + static assets            |
+| Hosting     | Cloudflare Workers + Assets                         |
 
 ## Project Structure
 
 ```
 temple-prep/
-├── packages/
-│   ├── worker/          # Cloudflare Worker API (Hono)
-│   └── frontend/        # Vite React app
+├── src/                 # React frontend (SPA)
+│   ├── components/      # UI and packet section components
+│   ├── pages/           # Admin and student page components
+│   ├── hooks/           # React hooks
+│   ├── lib/             # API client, types, constants
+│   └── styles/          # Tailwind entry CSS
+├── worker/              # Cloudflare Worker API (Hono)
+│   ├── index.ts         # Worker entry point
+│   ├── routes/          # API route handlers
+│   ├── middleware/       # Auth middleware
+│   └── types.ts         # Worker types
+├── migrations/          # D1 database migrations
 ├── e2e/                 # Playwright end-to-end tests
 ├── specs/               # Feature specs and plans
-└── pnpm-workspace.yaml
+├── vite.config.ts       # Unified Vite config (React + Cloudflare plugin)
+├── wrangler.jsonc       # Cloudflare Workers config (D1, assets, routing)
+└── index.html           # SPA entry point
 ```
 
 ## Prerequisites
@@ -54,33 +66,26 @@ pnpm install
 ### 2. Set up the local database
 
 ```bash
-pnpm --filter worker db:migrate:local
+pnpm db:migrate:local
 ```
 
 ### 3. Configure environment
 
-The worker uses a `.dev.vars` file for local development (already provided with a default PIN):
+Local secrets are in `.dev.vars` (already provided with a default PIN):
 
 ```
-# packages/worker/.dev.vars
 ADMIN_PIN=1234
 ```
 
 Change this PIN to something secure for your use.
 
-### 4. Start development servers
-
-In separate terminals:
+### 4. Start development
 
 ```bash
-# Terminal 1: Start the API
-pnpm dev:worker
-
-# Terminal 2: Start the frontend
 pnpm dev
 ```
 
-The frontend runs at `http://localhost:5173` and proxies API requests to the worker at `http://localhost:8787`.
+This single command starts both the React frontend (with HMR) and the Cloudflare Worker API. Everything runs on `http://localhost:5173`.
 
 ### 5. Access the app
 
@@ -99,26 +104,26 @@ pnpm test:e2e
 
 ## Deployment
 
-Deployment is to Cloudflare Workers and uses `wrangler`.
+Deployment is to Cloudflare Workers. **Do not deploy without explicit approval.**
 
-**Important**: Do not deploy without explicit approval. When ready:
+When ready:
 
 1. Create a D1 database in Cloudflare:
    ```bash
    wrangler d1 create temple-prep-db
    ```
-2. Update `wrangler.toml` with the actual `database_id`
+2. Update `wrangler.jsonc` with the actual `database_id`
 3. Set the admin PIN secret:
    ```bash
    wrangler secret put ADMIN_PIN
    ```
 4. Run migrations on the remote database:
    ```bash
-   pnpm --filter worker db:migrate
+   pnpm db:migrate
    ```
 5. Deploy:
    ```bash
-   pnpm --filter worker deploy
+   pnpm deploy
    ```
 
 ## Specs

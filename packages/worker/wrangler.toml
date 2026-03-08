@@ -1,8 +1,0 @@
-name = "temple-prep-api"
-main = "src/index.ts"
-compatibility_date = "2025-03-01"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "temple-prep-db"
-database_id = "local"

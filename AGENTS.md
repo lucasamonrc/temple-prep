@@ -9,11 +9,20 @@ This is a web application for LDS temple preparation instructors. It has two int
 
 ## Architecture
 
-- **Monorepo** managed by pnpm workspaces
-- **Frontend**: `packages/frontend/` — Vite + React + TypeScript + Tailwind CSS v4 + React Router v7 (declarative client-side routes, NOT framework mode)
-- **Backend**: `packages/worker/` — Cloudflare Workers + Hono + D1 (SQLite)
-- **Tests**: `e2e/` — Playwright end-to-end tests
+- **Single project** using `@cloudflare/vite-plugin` to unify frontend and worker
+- **Frontend**: `src/` — React + TypeScript + Tailwind CSS v4 + React Router v7 (declarative client-side routes, NOT framework mode)
+- **Backend**: `worker/` — Cloudflare Workers + Hono + D1 (SQLite)
+- **Tests**: `e2e/` — Playwright end-to-end tests (separate workspace for Playwright deps)
 - **Specs**: `specs/` — Feature specifications and plans. Start with `specs/PLAN.md` for the full picture.
+
+### How Frontend + Worker Coexist
+
+The `@cloudflare/vite-plugin` handles routing:
+- Requests matching static assets are served directly
+- API requests (`/api/*`) are routed to the Worker via `run_worker_first` in `wrangler.jsonc`
+- All other routes serve `index.html` (SPA fallback via `not_found_handling: "single-page-application"`)
+
+In dev, `pnpm dev` starts a single Vite server that handles both React HMR and the Worker (running in workerd).
 
 ## Key Conventions
 
@@ -22,11 +31,11 @@ This is a web application for LDS temple preparation instructors. It has two int
 - React functional components only
 - Tailwind CSS for all styling (v4 with `@import "tailwindcss"` syntax, custom theme via `@theme`)
 - Mobile-first responsive design for student pages
-- No component libraries — custom UI components in `packages/frontend/src/components/ui/`
+- No component libraries — custom UI components in `src/components/ui/`
 
 ### React Router v7
 - Using declarative routes (NOT framework mode)
-- Routes defined in `packages/frontend/src/router.tsx`
+- Routes defined in `src/router.tsx`
 - Client-side routing only, no SSR
 
 ### API
@@ -37,10 +46,16 @@ This is a web application for LDS temple preparation instructors. It has two int
 
 ### Database
 - Cloudflare D1 (SQLite)
-- Migrations in `packages/worker/migrations/`
+- Migrations in `migrations/`
 - Schema documented in `specs/database.md`
 - Foreign keys with `ON DELETE CASCADE`
 - JSON strings used for arrays (ministering_brothers, ministering_sisters)
+
+### Configuration Files
+- `vite.config.ts` — Unified Vite config with React, Tailwind, and Cloudflare plugins
+- `wrangler.jsonc` — Worker config: entry point, assets handling, D1 bindings
+- `tsconfig.json` — References tsconfig.app.json, tsconfig.node.json, tsconfig.worker.json
+- `.dev.vars` — Local secrets (ADMIN_PIN). Never committed.
 
 ### Testing
 - Playwright for e2e tests
@@ -59,15 +74,11 @@ This is a web application for LDS temple preparation instructors. It has two int
 
 ```bash
 pnpm install
-pnpm --filter worker db:migrate:local
-# Terminal 1:
-pnpm dev:worker
-# Terminal 2:
+pnpm db:migrate:local
 pnpm dev
 ```
 
-Frontend: http://localhost:5173 (proxies /api to :8787)
-Worker: http://localhost:8787
+Single command — everything at http://localhost:5173
 
 ## Specs Directory
 
@@ -82,4 +93,4 @@ This app serves a religious purpose. The content is specifically for members of 
 - Temple preparation steps (interviews, clothing, escorts, etc.)
 - Personal spiritual reflection
 
-Do not alter or remove any of the spiritual content (talks, scriptures, reflection questions) without explicit instruction. The static content (talks, scriptures, default to-dos) is defined in `packages/frontend/src/lib/constants.ts`.
+Do not alter or remove any of the spiritual content (talks, scriptures, reflection questions) without explicit instruction. The static content (talks, scriptures, default to-dos) is defined in `src/lib/constants.ts`.

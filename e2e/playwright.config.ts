@@ -27,18 +27,10 @@ export default defineConfig({
     //   use: { ...devices["iPhone 12"] },
     // },
   ],
-  webServer: [
-    {
-      command: "pnpm --filter worker dev",
-      port: 8787,
-      reuseExistingServer: !process.env.CI,
-      cwd: "..",
-    },
-    {
-      command: "pnpm --filter frontend dev",
-      port: 5173,
-      reuseExistingServer: !process.env.CI,
-      cwd: "..",
-    },
-  ],
+  webServer: {
+    command: "pnpm dev",
+    port: 5173,
+    reuseExistingServer: !process.env.CI,
+    cwd: "..",
+  },
 });
