@@ -16,16 +16,16 @@ A web app for LDS temple preparation instructors to create personalized, interac
 
 ## Tech Stack
 
-| Layer       | Technology                                          |
-| ----------- | --------------------------------------------------- |
-| Frontend    | Vite + React + TypeScript + React Router v7         |
-| Backend API | Cloudflare Workers + Hono                           |
-| Integration | @cloudflare/vite-plugin (single dev server)         |
-| Database    | Cloudflare D1 (SQLite)                              |
-| QR Codes    | qrcode.react                                        |
-| Styling     | Tailwind CSS v4                                     |
-| E2E Tests   | Playwright                                          |
-| Hosting     | Cloudflare Workers + Assets                         |
+| Layer       | Technology                                  |
+| ----------- | ------------------------------------------- |
+| Frontend    | Vite + React + TypeScript + React Router v7 |
+| Backend API | Cloudflare Workers + Hono                   |
+| Integration | @cloudflare/vite-plugin (single dev server) |
+| Database    | Cloudflare D1 (SQLite)                      |
+| QR Codes    | qrcode.react                                |
+| Styling     | Tailwind CSS v4                             |
+| E2E Tests   | Playwright                                  |
+| Hosting     | Cloudflare Workers + Assets                 |
 
 ## Project Structure
 
@@ -123,7 +123,7 @@ When ready:
    ```
 5. Deploy:
    ```bash
-   pnpm deploy
+   pnpm run deploy
    ```
 
 ## Specs
