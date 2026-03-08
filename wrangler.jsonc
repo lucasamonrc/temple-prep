@@ -5,13 +5,19 @@
   "main": "./worker/index.ts",
   "assets": {
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": ["/api/*"],
   },
+  "routes": [
+    {
+      "custom_domain": true,
+      "pattern": "templeprep.lucasacastro.com",
+    },
+  ],
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "temple-prep-db",
-      "database_id": "local"
-    }
-  ]
+      "database_id": "local",
+    },
+  ],
 }
