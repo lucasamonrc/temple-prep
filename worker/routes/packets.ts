@@ -1,40 +1,42 @@
 import { Hono } from "hono";
-import type { Env } from "../types";
+import { eq, and, desc, sql } from "drizzle-orm";
+import { packets, goals, escorts, reflections, journalEntries, todos } from "../db/schema";
+import type { AppBindings } from "../types";
 
-const packets = new Hono<{ Bindings: Env }>();
+const packetsRouter = new Hono<AppBindings>();
 
 // Get full packet data (public - student view)
-packets.get("/:uuid", async (c) => {
+packetsRouter.get("/:uuid", async (c) => {
+  const db = c.get("db");
   const uuid = c.req.param("uuid");
 
-  const packet = await c.env.DB.prepare("SELECT * FROM packets WHERE id = ?")
-    .bind(uuid)
-    .first();
+  const [packet] = await db.select().from(packets).where(eq(packets.id, uuid));
 
   if (!packet) {
     return c.json({ error: "Packet not found" }, 404);
   }
 
-  const [goals, escort, reflections, journal, todos] = await Promise.all([
-    c.env.DB.prepare("SELECT * FROM goals WHERE packet_id = ?").bind(uuid).all(),
-    c.env.DB.prepare("SELECT * FROM escorts WHERE packet_id = ?").bind(uuid).first(),
-    c.env.DB.prepare("SELECT * FROM reflections WHERE packet_id = ?").bind(uuid).all(),
-    c.env.DB.prepare("SELECT * FROM journal_entries WHERE packet_id = ? ORDER BY entry_date DESC").bind(uuid).all(),
-    c.env.DB.prepare("SELECT * FROM todos WHERE packet_id = ? ORDER BY sort_order").bind(uuid).all(),
+  const [packetGoals, escort, packetReflections, journal, packetTodos] = await Promise.all([
+    db.select().from(goals).where(eq(goals.packet_id, uuid)),
+    db.select().from(escorts).where(eq(escorts.packet_id, uuid)).then((rows) => rows[0] ?? null),
+    db.select().from(reflections).where(eq(reflections.packet_id, uuid)),
+    db.select().from(journalEntries).where(eq(journalEntries.packet_id, uuid)).orderBy(desc(journalEntries.entry_date)),
+    db.select().from(todos).where(eq(todos.packet_id, uuid)).orderBy(todos.sort_order),
   ]);
 
   return c.json({
     ...packet,
-    goals: goals.results,
+    goals: packetGoals,
     escort,
-    reflections: reflections.results,
-    journal: journal.results,
-    todos: todos.results,
+    reflections: packetReflections,
+    journal,
+    todos: packetTodos,
   });
 });
 
 // Update a goal
-packets.put("/:uuid/goals/:goalType", async (c) => {
+packetsRouter.put("/:uuid/goals/:goalType", async (c) => {
+  const db = c.get("db");
   const uuid = c.req.param("uuid");
   const goalType = c.req.param("goalType");
   const body = await c.req.json<{
@@ -43,39 +45,33 @@ packets.put("/:uuid/goals/:goalType", async (c) => {
     notes?: string;
   }>();
 
-  const fields: string[] = [];
-  const values: unknown[] = [];
+  const updates: Record<string, unknown> = {};
 
   if (body.scheduled_date !== undefined) {
-    fields.push("scheduled_date = ?");
-    values.push(body.scheduled_date);
+    updates.scheduled_date = body.scheduled_date;
   }
   if (body.completed !== undefined) {
-    fields.push("completed = ?");
-    values.push(body.completed ? 1 : 0);
+    updates.completed = body.completed ? 1 : 0;
   }
   if (body.notes !== undefined) {
-    fields.push("notes = ?");
-    values.push(body.notes);
+    updates.notes = body.notes;
   }
 
-  if (fields.length === 0) {
+  if (Object.keys(updates).length === 0) {
     return c.json({ error: "No fields to update" }, 400);
   }
 
-  values.push(uuid, goalType);
-
-  await c.env.DB.prepare(
-    `UPDATE goals SET ${fields.join(", ")} WHERE packet_id = ? AND goal_type = ?`,
-  )
-    .bind(...values)
-    .run();
+  await db
+    .update(goals)
+    .set(updates)
+    .where(and(eq(goals.packet_id, uuid), eq(goals.goal_type, goalType)));
 
   return c.json({ success: true });
 });
 
 // Update escort info
-packets.put("/:uuid/escort", async (c) => {
+packetsRouter.put("/:uuid/escort", async (c) => {
+  const db = c.get("db");
   const uuid = c.req.param("uuid");
   const body = await c.req.json<{
     name?: string;
@@ -84,103 +80,100 @@ packets.put("/:uuid/escort", async (c) => {
     relationship?: string;
   }>();
 
-  await c.env.DB.prepare(
-    `UPDATE escorts SET name = ?, phone = ?, email = ?, relationship = ? WHERE packet_id = ?`,
-  )
-    .bind(
-      body.name || null,
-      body.phone || null,
-      body.email || null,
-      body.relationship || null,
-      uuid,
-    )
-    .run();
+  await db
+    .update(escorts)
+    .set({
+      name: body.name || null,
+      phone: body.phone || null,
+      email: body.email || null,
+      relationship: body.relationship || null,
+    })
+    .where(eq(escorts.packet_id, uuid));
 
   return c.json({ success: true });
 });
 
 // Upsert reflection response
-packets.put("/:uuid/reflections/:key", async (c) => {
+packetsRouter.put("/:uuid/reflections/:key", async (c) => {
+  const db = c.get("db");
   const uuid = c.req.param("uuid");
   const key = c.req.param("key");
   const body = await c.req.json<{ response: string }>();
 
-  await c.env.DB.prepare(
-    `UPDATE reflections SET response = ?, updated_at = datetime('now') WHERE packet_id = ? AND question_key = ?`,
-  )
-    .bind(body.response, uuid, key)
-    .run();
+  await db
+    .update(reflections)
+    .set({
+      response: body.response,
+      updated_at: sql`datetime('now')`,
+    })
+    .where(and(eq(reflections.packet_id, uuid), eq(reflections.question_key, key)));
 
   return c.json({ success: true });
 });
 
 // Create journal entry
-packets.post("/:uuid/journal", async (c) => {
+packetsRouter.post("/:uuid/journal", async (c) => {
+  const db = c.get("db");
   const uuid = c.req.param("uuid");
   const body = await c.req.json<{ entry_date?: string; content: string }>();
 
-  const result = await c.env.DB.prepare(
-    `INSERT INTO journal_entries (packet_id, entry_date, content) VALUES (?, ?, ?)`,
-  )
-    .bind(uuid, body.entry_date || new Date().toISOString().split("T")[0], body.content)
-    .run();
+  const result = await db
+    .insert(journalEntries)
+    .values({
+      packet_id: uuid,
+      entry_date: body.entry_date || new Date().toISOString().split("T")[0],
+      content: body.content,
+    })
+    .returning({ id: journalEntries.id });
 
-  return c.json({ id: result.meta.last_row_id }, 201);
+  return c.json({ id: result[0].id }, 201);
 });
 
 // Update journal entry
-packets.put("/:uuid/journal/:id", async (c) => {
-  const id = c.req.param("id");
+packetsRouter.put("/:uuid/journal/:id", async (c) => {
+  const db = c.get("db");
+  const id = Number(c.req.param("id"));
   const body = await c.req.json<{ entry_date?: string; content?: string }>();
 
-  const fields: string[] = ["updated_at = datetime('now')"];
-  const values: unknown[] = [];
+  const updates: Record<string, unknown> = {
+    updated_at: sql`datetime('now')`,
+  };
 
   if (body.entry_date !== undefined) {
-    fields.push("entry_date = ?");
-    values.push(body.entry_date);
+    updates.entry_date = body.entry_date;
   }
   if (body.content !== undefined) {
-    fields.push("content = ?");
-    values.push(body.content);
+    updates.content = body.content;
   }
 
-  values.push(id);
-
-  await c.env.DB.prepare(
-    `UPDATE journal_entries SET ${fields.join(", ")} WHERE id = ?`,
-  )
-    .bind(...values)
-    .run();
+  await db.update(journalEntries).set(updates).where(eq(journalEntries.id, id));
 
   return c.json({ success: true });
 });
 
 // Delete journal entry
-packets.delete("/:uuid/journal/:id", async (c) => {
-  const id = c.req.param("id");
-  await c.env.DB.prepare("DELETE FROM journal_entries WHERE id = ?")
-    .bind(id)
-    .run();
+packetsRouter.delete("/:uuid/journal/:id", async (c) => {
+  const db = c.get("db");
+  const id = Number(c.req.param("id"));
+  await db.delete(journalEntries).where(eq(journalEntries.id, id));
   return c.json({ success: true });
 });
 
 // Toggle todo completion
-packets.put("/:uuid/todos/:id", async (c) => {
-  const id = c.req.param("id");
+packetsRouter.put("/:uuid/todos/:id", async (c) => {
+  const db = c.get("db");
+  const id = Number(c.req.param("id"));
   const body = await c.req.json<{ completed: boolean }>();
 
-  await c.env.DB.prepare(
-    `UPDATE todos SET completed = ?, completed_at = ? WHERE id = ?`,
-  )
-    .bind(
-      body.completed ? 1 : 0,
-      body.completed ? new Date().toISOString() : null,
-      id,
-    )
-    .run();
+  await db
+    .update(todos)
+    .set({
+      completed: body.completed ? 1 : 0,
+      completed_at: body.completed ? new Date().toISOString() : null,
+    })
+    .where(eq(todos.id, id));
 
   return c.json({ success: true });
 });
 
-export { packets };
+export { packetsRouter as packets };

@@ -1,73 +1,29 @@
+import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
+import type { Database } from "./db";
+import type * as schema from "./db/schema";
+
 export interface Env {
   DB: D1Database;
   ADMIN_PIN: string;
 }
 
-export interface Packet {
-  id: string;
-  student_name: string;
-  created_at: string;
-  updated_at: string;
-  testimony: string | null;
-  personal_note: string | null;
-  congratulations_message: string | null;
-  temple_name: string;
-  temple_phone: string | null;
-  temple_url: string | null;
-  bishop_name: string | null;
-  bishop_phone: string | null;
-  bishop_email: string | null;
-  exec_secretary_name: string | null;
-  exec_secretary_phone: string | null;
-  exec_secretary_email: string | null;
-  ministering_brothers: string | null;
-  ministering_sisters: string | null;
-  instructor_name: string | null;
-  instructor_phone: string | null;
-  instructor_email: string | null;
+export interface AppBindings {
+  Bindings: Env;
+  Variables: {
+    db: Database;
+  };
 }
 
-export interface Goal {
-  id: number;
-  packet_id: string;
-  goal_type: "bishop_interview" | "stake_interview" | "temple_appointment";
-  scheduled_date: string | null;
-  completed: number;
-  notes: string | null;
-}
+// Select types (reading from DB)
+export type Packet = InferSelectModel<typeof schema.packets>;
+export type Goal = InferSelectModel<typeof schema.goals>;
+export type Escort = InferSelectModel<typeof schema.escorts>;
+export type Reflection = InferSelectModel<typeof schema.reflections>;
+export type JournalEntry = InferSelectModel<typeof schema.journalEntries>;
+export type Todo = InferSelectModel<typeof schema.todos>;
 
-export interface Escort {
-  packet_id: string;
-  name: string | null;
-  phone: string | null;
-  email: string | null;
-  relationship: string | null;
-}
-
-export interface Reflection {
-  id: number;
-  packet_id: string;
-  question_key: string;
-  response: string | null;
-  updated_at: string;
-}
-
-export interface JournalEntry {
-  id: number;
-  packet_id: string;
-  entry_date: string;
-  content: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Todo {
-  id: number;
-  packet_id: string;
-  title: string;
-  description: string | null;
-  category: string | null;
-  sort_order: number;
-  completed: number;
-  completed_at: string | null;
-}
+// Insert types (writing to DB)
+export type NewPacket = InferInsertModel<typeof schema.packets>;
+export type NewGoal = InferInsertModel<typeof schema.goals>;
+export type NewReflection = InferInsertModel<typeof schema.reflections>;
+export type NewTodo = InferInsertModel<typeof schema.todos>;

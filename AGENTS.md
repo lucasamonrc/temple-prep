@@ -11,7 +11,7 @@ This is a web application for LDS temple preparation instructors. It has two int
 
 - **Single project** using `@cloudflare/vite-plugin` to unify frontend and worker
 - **Frontend**: `src/` — React + TypeScript + Tailwind CSS v4 + React Router v7 (declarative client-side routes, NOT framework mode)
-- **Backend**: `worker/` — Cloudflare Workers + Hono + D1 (SQLite)
+- **Backend**: `worker/` — Cloudflare Workers + Hono + Drizzle ORM + D1 (SQLite)
 - **Tests**: `e2e/` — Playwright end-to-end tests (separate workspace for Playwright deps)
 - **Specs**: `specs/` — Feature specifications and plans. Start with `specs/PLAN.md` for the full picture.
 
@@ -45,9 +45,12 @@ In dev, `pnpm dev` starts a single Vite server that handles both React HMR and t
 - Hono framework for routing in the worker
 
 ### Database
-- Cloudflare D1 (SQLite)
-- Migrations in `migrations/`
-- Schema documented in `specs/database.md`
+- Cloudflare D1 (SQLite) via **Drizzle ORM** (`drizzle-orm/d1`)
+- Schema defined in code: `worker/db/schema.ts` (single source of truth for types + migrations)
+- Drizzle client created per-request and injected into Hono context via middleware (`c.get("db")`)
+- Types (`Packet`, `Goal`, etc.) derived from schema with `InferSelectModel` / `InferInsertModel` in `worker/types.ts`
+- Raw SQL migrations still in `migrations/` (applied via `wrangler d1 execute`)
+- Drizzle Kit config in `drizzle.config.ts` for future migration generation
 - Foreign keys with `ON DELETE CASCADE`
 - JSON strings used for arrays (ministering_brothers, ministering_sisters)
 

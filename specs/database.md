@@ -1,4 +1,6 @@
-# Database Schema — Cloudflare D1
+# Database Schema — Cloudflare D1 + Drizzle ORM
+
+The database schema is defined as code in `worker/db/schema.ts` using Drizzle ORM's SQLite schema builder. TypeScript types for all tables are derived from the schema via `InferSelectModel` and `InferInsertModel` in `worker/types.ts`. The Drizzle client is created per-request in middleware and accessed in route handlers via `c.get("db")`.
 
 ## Tables
 

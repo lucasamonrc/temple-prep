@@ -1,8 +1,10 @@
 import { Hono } from "hono";
+import { eq, desc, sql } from "drizzle-orm";
 import { adminAuth } from "../middleware/auth";
-import type { Env } from "../types";
+import { packets, goals, escorts, reflections, journalEntries, todos } from "../db/schema";
+import type { AppBindings } from "../types";
 
-const admin = new Hono<{ Bindings: Env }>();
+const admin = new Hono<AppBindings>();
 
 // Login - validate PIN (no middleware on this one)
 admin.post("/login", async (c) => {
@@ -18,79 +20,70 @@ admin.use("/*", adminAuth);
 
 // List all packets
 admin.get("/packets", async (c) => {
-  const result = await c.env.DB.prepare(
-    "SELECT id, student_name, created_at, updated_at FROM packets ORDER BY created_at DESC",
-  ).all();
-  return c.json({ packets: result.results });
+  const db = c.get("db");
+  const result = await db
+    .select({
+      id: packets.id,
+      student_name: packets.student_name,
+      created_at: packets.created_at,
+      updated_at: packets.updated_at,
+    })
+    .from(packets)
+    .orderBy(desc(packets.created_at));
+  return c.json({ packets: result });
 });
 
 // Create a new packet
 admin.post("/packets", async (c) => {
+  const db = c.get("db");
   const body = await c.req.json();
   const id = crypto.randomUUID();
 
-  await c.env.DB.prepare(
-    `INSERT INTO packets (
-      id, student_name, testimony, personal_note, congratulations_message,
-      temple_name, temple_phone, temple_url,
-      bishop_name, bishop_phone, bishop_email,
-      exec_secretary_name, exec_secretary_phone, exec_secretary_email,
-      ministering_brothers, ministering_sisters,
-      instructor_name, instructor_phone, instructor_email
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  )
-    .bind(
-      id,
-      body.student_name,
-      body.testimony || null,
-      body.personal_note || null,
-      body.congratulations_message || null,
-      body.temple_name || "San Antonio Texas Temple",
-      body.temple_phone || "(210) 937-5100",
+  // Insert packet
+  await db.insert(packets).values({
+    id,
+    student_name: body.student_name,
+    testimony: body.testimony || null,
+    personal_note: body.personal_note || null,
+    congratulations_message: body.congratulations_message || null,
+    temple_name: body.temple_name || "San Antonio Texas Temple",
+    temple_phone: body.temple_phone || "(210) 937-5100",
+    temple_url:
       body.temple_url ||
-        "https://www.churchofjesuschrist.org/temples/details/san-antonio-texas-temple?lang=eng",
-      body.bishop_name || null,
-      body.bishop_phone || null,
-      body.bishop_email || null,
-      body.exec_secretary_name || null,
-      body.exec_secretary_phone || null,
-      body.exec_secretary_email || null,
-      body.ministering_brothers ? JSON.stringify(body.ministering_brothers) : null,
-      body.ministering_sisters ? JSON.stringify(body.ministering_sisters) : null,
-      body.instructor_name || null,
-      body.instructor_phone || null,
-      body.instructor_email || null,
-    )
-    .run();
+      "https://www.churchofjesuschrist.org/temples/details/san-antonio-texas-temple?lang=eng",
+    bishop_name: body.bishop_name || null,
+    bishop_phone: body.bishop_phone || null,
+    bishop_email: body.bishop_email || null,
+    exec_secretary_name: body.exec_secretary_name || null,
+    exec_secretary_phone: body.exec_secretary_phone || null,
+    exec_secretary_email: body.exec_secretary_email || null,
+    ministering_brothers: body.ministering_brothers
+      ? JSON.stringify(body.ministering_brothers)
+      : null,
+    ministering_sisters: body.ministering_sisters
+      ? JSON.stringify(body.ministering_sisters)
+      : null,
+    instructor_name: body.instructor_name || null,
+    instructor_phone: body.instructor_phone || null,
+    instructor_email: body.instructor_email || null,
+  });
 
-  // Seed default goals
-  const goalTypes = ["bishop_interview", "stake_interview", "temple_appointment"];
-  for (const goalType of goalTypes) {
-    await c.env.DB.prepare(
-      "INSERT INTO goals (packet_id, goal_type) VALUES (?, ?)",
-    )
-      .bind(id, goalType)
-      .run();
-  }
+  // Seed default goals (batch insert)
+  const goalTypes = ["bishop_interview", "stake_interview", "temple_appointment"] as const;
+  await db.insert(goals).values(
+    goalTypes.map((goal_type) => ({ packet_id: id, goal_type })),
+  );
 
   // Seed default escort row
-  await c.env.DB.prepare(
-    "INSERT INTO escorts (packet_id) VALUES (?)",
-  )
-    .bind(id)
-    .run();
+  await db.insert(escorts).values({ packet_id: id });
 
-  // Seed default reflection questions
+  // Seed default reflection questions (batch insert)
   const questionKeys = ["ask_lord", "gratitude", "help_needed", "power_sought"];
-  for (const key of questionKeys) {
-    await c.env.DB.prepare(
-      "INSERT INTO reflections (packet_id, question_key) VALUES (?, ?)",
-    )
-      .bind(id, key)
-      .run();
-  }
+  await db.insert(reflections).values(
+    questionKeys.map((question_key) => ({ packet_id: id, question_key })),
+  );
 
-  // Seed default to-do items
+  // Seed default to-do items (batch insert)
   const defaultTodos = [
     { title: "Schedule recommend interview with Bishop", description: "Contact your ward's executive secretary to schedule", category: "interviews", sort_order: 1 },
     { title: "Complete recommend interview with Bishop", description: "Bring a prayerful heart and honest spirit", category: "interviews", sort_order: 2 },
@@ -109,55 +102,47 @@ admin.post("/packets", async (c) => {
     { title: "Prepare names for the temple prayer roll", description: "Names of people with special needs for united prayer", category: "spiritual", sort_order: 15 },
     { title: "Read/review the spiritual preparation resources", description: "General Authority talks and scriptures in this packet", category: "spiritual", sort_order: 16 },
   ];
-
-  for (const todo of defaultTodos) {
-    await c.env.DB.prepare(
-      "INSERT INTO todos (packet_id, title, description, category, sort_order) VALUES (?, ?, ?, ?, ?)",
-    )
-      .bind(id, todo.title, todo.description, todo.category, todo.sort_order)
-      .run();
-  }
+  await db.insert(todos).values(
+    defaultTodos.map((todo) => ({ packet_id: id, ...todo })),
+  );
 
   return c.json({ id }, 201);
 });
 
 // Get a single packet (admin view - full details)
 admin.get("/packets/:id", async (c) => {
+  const db = c.get("db");
   const id = c.req.param("id");
 
-  const packet = await c.env.DB.prepare("SELECT * FROM packets WHERE id = ?")
-    .bind(id)
-    .first();
+  const [packet] = await db.select().from(packets).where(eq(packets.id, id));
 
   if (!packet) {
     return c.json({ error: "Packet not found" }, 404);
   }
 
-  const [goals, escort, reflections, journal, todos] = await Promise.all([
-    c.env.DB.prepare("SELECT * FROM goals WHERE packet_id = ?").bind(id).all(),
-    c.env.DB.prepare("SELECT * FROM escorts WHERE packet_id = ?").bind(id).first(),
-    c.env.DB.prepare("SELECT * FROM reflections WHERE packet_id = ?").bind(id).all(),
-    c.env.DB.prepare("SELECT * FROM journal_entries WHERE packet_id = ? ORDER BY entry_date DESC").bind(id).all(),
-    c.env.DB.prepare("SELECT * FROM todos WHERE packet_id = ? ORDER BY sort_order").bind(id).all(),
+  const [packetGoals, escort, packetReflections, journal, packetTodos] = await Promise.all([
+    db.select().from(goals).where(eq(goals.packet_id, id)),
+    db.select().from(escorts).where(eq(escorts.packet_id, id)).then((rows) => rows[0] ?? null),
+    db.select().from(reflections).where(eq(reflections.packet_id, id)),
+    db.select().from(journalEntries).where(eq(journalEntries.packet_id, id)).orderBy(desc(journalEntries.entry_date)),
+    db.select().from(todos).where(eq(todos.packet_id, id)).orderBy(todos.sort_order),
   ]);
 
   return c.json({
     ...packet,
-    goals: goals.results,
+    goals: packetGoals,
     escort,
-    reflections: reflections.results,
-    journal: journal.results,
-    todos: todos.results,
+    reflections: packetReflections,
+    journal,
+    todos: packetTodos,
   });
 });
 
 // Update a packet
 admin.put("/packets/:id", async (c) => {
+  const db = c.get("db");
   const id = c.req.param("id");
   const body = await c.req.json();
-
-  const fields: string[] = [];
-  const values: unknown[] = [];
 
   const allowedFields = [
     "student_name", "testimony", "personal_note", "congratulations_message",
@@ -166,40 +151,36 @@ admin.put("/packets/:id", async (c) => {
     "exec_secretary_name", "exec_secretary_phone", "exec_secretary_email",
     "ministering_brothers", "ministering_sisters",
     "instructor_name", "instructor_phone", "instructor_email",
-  ];
+  ] as const;
 
+  const updates: Record<string, unknown> = {};
   for (const field of allowedFields) {
     if (field in body) {
-      fields.push(`${field} = ?`);
       const val = body[field];
       if ((field === "ministering_brothers" || field === "ministering_sisters") && typeof val === "object") {
-        values.push(JSON.stringify(val));
+        updates[field] = JSON.stringify(val);
       } else {
-        values.push(val);
+        updates[field] = val;
       }
     }
   }
 
-  if (fields.length === 0) {
+  if (Object.keys(updates).length === 0) {
     return c.json({ error: "No fields to update" }, 400);
   }
 
-  fields.push("updated_at = datetime('now')");
-  values.push(id);
+  updates.updated_at = sql`datetime('now')`;
 
-  await c.env.DB.prepare(
-    `UPDATE packets SET ${fields.join(", ")} WHERE id = ?`,
-  )
-    .bind(...values)
-    .run();
+  await db.update(packets).set(updates).where(eq(packets.id, id));
 
   return c.json({ success: true });
 });
 
 // Delete a packet
 admin.delete("/packets/:id", async (c) => {
+  const db = c.get("db");
   const id = c.req.param("id");
-  await c.env.DB.prepare("DELETE FROM packets WHERE id = ?").bind(id).run();
+  await db.delete(packets).where(eq(packets.id, id));
   return c.json({ success: true });
 });
 

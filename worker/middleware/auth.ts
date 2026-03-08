@@ -1,7 +1,7 @@
 import { createMiddleware } from "hono/factory";
-import type { Env } from "../types";
+import type { AppBindings } from "../types";
 
-export const adminAuth = createMiddleware<{ Bindings: Env }>(
+export const adminAuth = createMiddleware<AppBindings>(
   async (c, next) => {
     const authHeader = c.req.header("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
