@@ -85,3 +85,17 @@ export const todos = sqliteTable("todos", {
   completed: integer("completed").default(0),
   completed_at: text("completed_at"),
 });
+
+export const pdfJobs = sqliteTable("pdf_jobs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  packet_id: text("packet_id")
+    .notNull()
+    .unique()
+    .references(() => packets.id, { onDelete: "cascade" }),
+  status: text("status").notNull().default("pending"),
+  r2_key: text("r2_key"),
+  workflow_id: text("workflow_id"),
+  error_message: text("error_message"),
+  created_at: text("created_at").default(sql`(datetime('now'))`),
+  completed_at: text("completed_at"),
+});

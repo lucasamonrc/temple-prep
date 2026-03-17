@@ -67,6 +67,21 @@ export async function deletePacket(id: string) {
   return res.json();
 }
 
+export async function generatePdf(
+  id: string,
+): Promise<{ status: string; workflow_id: string }> {
+  const res = await fetch(`${API_BASE}/admin/packets/${id}/pdf`, {
+    method: "POST",
+    headers: getAdminHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to trigger PDF generation");
+  return res.json();
+}
+
+export function getPdfDownloadUrl(id: string): string {
+  return `${API_BASE}/admin/packets/${id}/pdf`;
+}
+
 // Student API
 
 export async function lookupPacket(

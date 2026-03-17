@@ -125,3 +125,57 @@
 
 ### AC-23: Admin — PIN Visible on Dashboard
 - Login → verify at least one packet shows its PIN on the dashboard
+
+## PDF Generation Tests (`e2e/pdf-generation.spec.ts`)
+
+### AC-24: Print Route Renders Full Packet
+- Navigate to `/print/{uuid}` for a valid packet
+- Verify all 13 section headings present
+- Verify packet-specific content (testimony, bishop name, etc.)
+
+### AC-25: Print Route is Non-Interactive
+- Navigate to `/print/{uuid}`
+- Verify no section navigation bar
+- Verify all checkboxes, textareas, and date inputs are disabled
+- Verify no "Add Entry" button for journal
+
+### AC-26: Generate PDF Button Visible When No PDF Exists
+- Login → dashboard
+- Verify "Generate PDF" button visible on packet card
+- Button has `data-testid="pdf-generate-{id}"`
+
+### AC-27: Clicking Generate PDF Triggers API Call
+- Click "Generate PDF" button
+- Verify POST request to `/api/admin/packets/:id/pdf` is made
+
+### AC-28: Generating Status Displayed (Mocked)
+- Mock packet list API to return `pdf_status: "generating"`
+- Verify "Generating..." badge visible on packet card
+
+### AC-29: Download Button Appears When PDF Ready (Mocked)
+- Mock packet list API to return `pdf_status: "ready"` with `pdf_generated_at` after `updated_at`
+- Verify "Download PDF" button visible
+
+### AC-30: Outdated Badge After Packet Update (Mocked)
+- Mock packet list API to return `pdf_status: "ready"` with `updated_at` after `pdf_generated_at`
+- Verify "Outdated" badge and "Regenerate" button visible
+
+### AC-31: Error State With Retry Button (Mocked)
+- Mock packet list API to return `pdf_status: "error"`
+- Verify "Error" badge and "Retry" button visible
+
+### AC-32: POST Triggers PDF Generation
+- POST `/api/admin/packets/:id/pdf` with valid auth
+- Verify 202 response with `{ status: "pending", workflow_id: "..." }`
+
+### AC-33: GET Returns 404 When PDF Not Ready
+- GET `/api/admin/packets/:id/pdf` when no PDF is ready
+- Verify 404 response
+
+### AC-34: Packet List Includes PDF Status
+- GET `/api/admin/packets` after triggering PDF generation
+- Verify response includes `pdf_status` field per packet
+
+### AC-35: Deleting Packet Removes PDF Job
+- Create packet, trigger PDF generation, delete packet
+- Verify packet is fully removed (404 on GET)

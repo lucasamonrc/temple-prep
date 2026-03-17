@@ -78,3 +78,14 @@ export interface MinisteringContact {
   phone: string;
   email?: string;
 }
+
+// Admin packet list item (summary with PDF status)
+export interface PacketSummary {
+  id: string;
+  student_name: string;
+  student_pin: string | null;
+  created_at: string;
+  updated_at: string;
+  pdf_status: "pending" | "generating" | "ready" | "error" | null;
+  pdf_generated_at: string | null;
+}

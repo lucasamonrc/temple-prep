@@ -18,7 +18,7 @@ export function SectionNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 sm:hidden no-print z-40">
+    <nav data-testid="section-nav" className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 sm:hidden no-print z-40">
       <div className="flex overflow-x-auto py-2 px-2 gap-1">
         {SECTIONS.map((section) => (
           <button

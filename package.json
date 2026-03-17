@@ -8,8 +8,8 @@
     "preview": "vite build && vite preview",
     "deploy": "vite build && wrangler deploy",
     "typecheck": "tsc -b",
-    "db:migrate:local": "wrangler d1 execute temple-prep-db --local --file=./migrations/0001_initial.sql && wrangler d1 execute temple-prep-db --local --file=./migrations/0002_student_pin.sql",
-    "db:migrate": "wrangler d1 execute temple-prep-db --remote --file=./migrations/0001_initial.sql && wrangler d1 execute temple-prep-db --remote --file=./migrations/0002_student_pin.sql",
+    "db:migrate:local": "wrangler d1 execute temple-prep-db --local --file=./migrations/0001_initial.sql && wrangler d1 execute temple-prep-db --local --file=./migrations/0002_student_pin.sql && wrangler d1 execute temple-prep-db --local --file=./migrations/0003_pdf_jobs.sql",
+    "db:migrate": "wrangler d1 execute temple-prep-db --remote --file=./migrations/0001_initial.sql && wrangler d1 execute temple-prep-db --remote --file=./migrations/0002_student_pin.sql && wrangler d1 execute temple-prep-db --remote --file=./migrations/0003_pdf_jobs.sql",
     "test:e2e": "pnpm --filter e2e test"
   },
   "dependencies": {
@@ -21,6 +21,7 @@
     "react-router": "^7.3.0"
   },
   "devDependencies": {
+    "@cloudflare/puppeteer": "^1.0.6",
     "@cloudflare/vite-plugin": "^1.0.0",
     "@cloudflare/workers-types": "^4.20250214.0",
     "@tailwindcss/vite": "^4.0.0",

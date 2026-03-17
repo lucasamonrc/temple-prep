@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { createDb } from "./db";
 import { admin } from "./routes/admin";
 import { packets } from "./routes/packets";
+import { pdf } from "./routes/pdf";
 import type { AppBindings } from "./types";
 
 const app = new Hono<AppBindings>();
@@ -13,9 +14,13 @@ app.use("*", async (c, next) => {
 });
 
 app.route("/api/admin", admin);
+app.route("/api/admin", pdf);
 app.route("/api/packets", packets);
 
 // Health check
 app.get("/api/health", (c) => c.json({ status: "ok" }));
 
 export default app;
+
+// Export the Workflow class for Cloudflare Workflows
+export { PdfGenerationWorkflow } from "./workflows/pdf-generation";

@@ -38,6 +38,7 @@ A web app for LDS temple preparation instructors to create personalized, interac
 | Student Packet Page (all sections) | [student-packet.md](student-packet.md) | Complete |
 | Student PIN Lookup | [student-lookup.md](student-lookup.md) | Complete |
 | E2E Test Plan & Acceptance Criteria | [e2e-tests.md](e2e-tests.md) | Complete |
+| PDF Generation | [pdf-generation.md](pdf-generation.md) | Complete |
 
 ## Implementation Phases
 
@@ -96,6 +97,17 @@ All 13 sections, mobile-first:
 - Admin: PIN field in packet create/edit form, PIN shown on dashboard
 - 6 new e2e tests (AC-18 through AC-23)
 - 42/42 tests passing (chromium + mobile-chrome)
+
+### Phase 6: PDF Generation ✅
+- Cloudflare Browser Rendering + R2 + Workflows
+- `pdf_jobs` table with status tracking
+- `POST /api/admin/packets/:id/pdf` triggers generation
+- `GET /api/admin/packets/:id/pdf` downloads the PDF
+- Print-optimized `/print/:uuid` route
+- Dashboard: PDF status badges, Generate/Download/Regenerate/Retry buttons
+- Auto-polling every 3s while generation in progress
+- 12 new e2e tests (AC-24 through AC-35)
+- 66/66 tests passing (chromium + mobile-chrome)
 
 ### Phase 8: Polish
 - Print CSS

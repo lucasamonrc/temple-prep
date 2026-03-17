@@ -6,6 +6,7 @@ import { PacketForm } from "./pages/admin/PacketForm";
 import { PacketPreview } from "./pages/admin/PacketPreview";
 import { StudentLookup } from "./pages/student/Lookup";
 import { StudentPacket } from "./pages/student/Packet";
+import { PrintPacket } from "./pages/print/PrintPacket";
 
 export function AppRoutes() {
   return (
@@ -22,6 +23,9 @@ export function AppRoutes() {
 
       {/* Student packet (public, direct UUID link) */}
       <Route path="/p/:uuid" element={<StudentPacket />} />
+
+      {/* Print-optimized packet (used by PDF generation) */}
+      <Route path="/print/:uuid" element={<PrintPacket />} />
     </Routes>
   );
 }

@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { eq, desc, sql } from "drizzle-orm";
 import { adminAuth } from "../middleware/auth";
-import { packets, goals, escorts, reflections, journalEntries, todos } from "../db/schema";
+import { packets, goals, escorts, reflections, journalEntries, todos, pdfJobs } from "../db/schema";
 import type { AppBindings } from "../types";
 
 const admin = new Hono<AppBindings>();
@@ -18,7 +18,7 @@ admin.post("/login", async (c) => {
 // All other admin routes require auth
 admin.use("/*", adminAuth);
 
-// List all packets
+// List all packets (with PDF status via LEFT JOIN)
 admin.get("/packets", async (c) => {
   const db = c.get("db");
   const result = await db
@@ -28,8 +28,11 @@ admin.get("/packets", async (c) => {
       student_pin: packets.student_pin,
       created_at: packets.created_at,
       updated_at: packets.updated_at,
+      pdf_status: pdfJobs.status,
+      pdf_generated_at: pdfJobs.completed_at,
     })
     .from(packets)
+    .leftJoin(pdfJobs, eq(packets.id, pdfJobs.packet_id))
     .orderBy(desc(packets.created_at));
   return c.json({ packets: result });
 });
@@ -179,10 +182,26 @@ admin.put("/packets/:id", async (c) => {
   return c.json({ success: true });
 });
 
-// Delete a packet
+// Delete a packet (also cleans up R2 PDF if it exists)
 admin.delete("/packets/:id", async (c) => {
   const db = c.get("db");
   const id = c.req.param("id");
+
+  // Check for a PDF in R2 and clean it up
+  const [job] = await db
+    .select({ r2_key: pdfJobs.r2_key })
+    .from(pdfJobs)
+    .where(eq(pdfJobs.packet_id, id));
+
+  if (job?.r2_key) {
+    try {
+      await c.env.PDF_BUCKET.delete(job.r2_key);
+    } catch {
+      // Non-fatal: R2 cleanup failure shouldn't block deletion
+    }
+  }
+
+  // CASCADE will handle pdf_jobs row deletion
   await db.delete(packets).where(eq(packets.id, id));
   return c.json({ success: true });
 });

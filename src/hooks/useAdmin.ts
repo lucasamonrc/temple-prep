@@ -1,15 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
 import * as api from "@/lib/api";
-import type { Packet } from "@/lib/types";
+import type { Packet, PacketSummary } from "@/lib/types";
 
-interface PacketSummary {
-  id: string;
-  student_name: string;
-  student_pin: string | null;
-  created_at: string;
-  updated_at: string;
-}
+const PDF_POLL_INTERVAL = 3000;
 
 export function useAdminAuth() {
   const navigate = useNavigate();
@@ -34,13 +28,13 @@ export function usePacketList() {
   const [packets, setPackets] = useState<PacketSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchPackets = useCallback(async () => {
-    setLoading(true);
-    setError(null);
     try {
       const data = await api.listPackets();
       setPackets(data.packets);
+      setError(null);
     } catch {
       setError("Failed to load packets.");
     } finally {
@@ -48,9 +42,32 @@ export function usePacketList() {
     }
   }, []);
 
+  // Initial fetch
   useEffect(() => {
+    setLoading(true);
     fetchPackets();
   }, [fetchPackets]);
+
+  // Auto-poll when any packet has a pending/generating PDF status
+  useEffect(() => {
+    const hasPending = packets.some(
+      (p) => p.pdf_status === "pending" || p.pdf_status === "generating",
+    );
+
+    if (hasPending && !pollingRef.current) {
+      pollingRef.current = setInterval(fetchPackets, PDF_POLL_INTERVAL);
+    } else if (!hasPending && pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+  }, [packets, fetchPackets]);
 
   const removePacket = useCallback(
     async (id: string) => {

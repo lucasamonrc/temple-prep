@@ -57,6 +57,15 @@
   }
 }
 
+/* Print-optimized mode (used by /print/:uuid for PDF generation) */
+.print-mode {
+  background: white;
+}
+
+.print-mode .bg-cream {
+  background: white;
+}
+
 @media print {
   .no-print {
     display: none !important;

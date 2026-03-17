@@ -2,6 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "temple-prep",
   "compatibility_date": "2025-03-01",
+  "compatibility_flags": ["nodejs_compat"],
   "main": "./worker/index.ts",
   "assets": {
     "not_found_handling": "single-page-application",
@@ -18,6 +19,22 @@
       "binding": "DB",
       "database_name": "temple-prep-db",
       "database_id": "f14a08db-dd44-4efa-8daf-b5da02f931ee",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "PDF_BUCKET",
+      "bucket_name": "temple-prep-pdfs",
+    },
+  ],
+  "browser": {
+    "binding": "BROWSER",
+  },
+  "workflows": [
+    {
+      "name": "pdf-generation",
+      "binding": "PDF_WORKFLOW",
+      "class_name": "PdfGenerationWorkflow",
     },
   ],
 }
